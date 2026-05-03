@@ -1,6 +1,6 @@
 # Make My Day
 
-A server that generates dashboard images for [Seeed reTerminal E1001](https://www.seeedstudio.com/reTerminal-E1001-p-5736.html) (7.5" B&W e-ink) and [E1002](https://www.seeedstudio.com/reTerminal-E1002-p-6044.html) (10.3" 6-color e-ink) displays. Dashboards are configured via YAML files with random, unguessable IDs (the same model as WeTransfer links).
+A server that generates dashboard images for [Seeed reTerminal E1001](https://www.seeedstudio.com/reTerminal-E1001-p-5736.html) (7.5" B&W e-ink) and [E1002](https://www.seeedstudio.com/reTerminal-E1002-p-6044.html) (7.3" 6-color e-ink) displays. Dashboards are configured via YAML files with random, unguessable IDs (the same model as WeTransfer links).
 
 ## What it does
 
@@ -13,12 +13,14 @@ Create a YAML config → the server renders a dashboard image → your e-ink pan
 
 ## Supported devices
 
-| Device | Display | Theme | Description |
-|--------|---------|-------|-------------|
-| **reTerminal E1001** | 7.5", 800×480, B&W | `bw` or `grayscale4` | Budget-friendly, great for text-heavy dashboards |
-| **reTerminal E1002** | 10.3", 1200×825, 6-color Spectra 6 | `color` (dithered to black/white/red/green/blue/yellow) | Full-color dashboard with richer visuals |
+| Device               | Display                          | Theme                                                   | Description                                      |
+| -------------------- | -------------------------------- | ------------------------------------------------------- | ------------------------------------------------ |
+| **reTerminal E1001** | 7.5", 800×480, B&W               | `bw` or `grayscale4`                                    | Budget-friendly, great for text-heavy dashboards |
+| **reTerminal E1002** | 7.3", 800×480, 6-color Spectra 6 | `color` (dithered to black/white/red/green/blue/yellow) | Full-color dashboard with richer visuals         |
 
 ## Quick Start (local)
+
+### With Bun (fastest)
 
 ```bash
 # 1. Install dependencies
@@ -30,6 +32,16 @@ bunx playwright install chromium
 # 3. Start the server
 bun start
 ```
+
+### With Node.js (recommended for production)
+
+```bash
+npm install
+npx playwright install chromium
+npx tsx server.ts
+```
+
+Node.js is recommended over Bun for long-running production deployments. The Dockerfile uses Node.js at runtime to avoid zombie child processes (Bun's process model doesn't propagate SIGCHLD correctly, causing renderer zombies).
 
 The server runs at `http://localhost:7000`. Create `configs/example.yaml` and access it at `http://localhost:7000/example`.
 
@@ -144,12 +156,12 @@ medication:
 
 ### Accessing your dashboard
 
-| URL | Description |
-|-----|-------------|
-| `http://localhost:7000/my-dashboard` | Responsive HTML (phone-friendly preview) |
-| `http://localhost:7000/my-dashboard.png` | E-ink image (page 1) |
-| `http://localhost:7000/my-dashboard-2.png` | E-ink image (page 2, week view) |
-| `http://localhost:7000/my-dashboard.html` | Fixed 800×480 HTML (e-ink preview) |
+| URL                                        | Description                              |
+| ------------------------------------------ | ---------------------------------------- |
+| `http://localhost:7000/my-dashboard`       | Responsive HTML (phone-friendly preview) |
+| `http://localhost:7000/my-dashboard.png`   | E-ink image (page 1)                     |
+| `http://localhost:7000/my-dashboard-2.png` | E-ink image (page 2, week view)          |
+| `http://localhost:7000/my-dashboard.html`  | Fixed 800×480 HTML (e-ink preview)       |
 
 ### Complete per-person example
 
@@ -288,7 +300,15 @@ On the panel, press the secondary button to cycle between pages. The ESPHome con
 
 ### Option 1: Run locally (easiest for LAN-only panels)
 
-Just run `bun start` on any computer that stays on — a laptop, Raspberry Pi, or desktop. For LAN-only panels, skip external hosting entirely.
+Just run the server on any computer that stays on — a laptop, Raspberry Pi, or desktop.
+
+```bash
+npm install && npx tsx server.ts    # Node.js (recommended for production)
+# or
+bun install && bun start            # Bun (faster dev, avoid for long-running)
+```
+
+For LAN-only panels, skip external hosting entirely.
 
 Update your ESPHome config to use your local IP:
 ```yaml
@@ -332,28 +352,28 @@ If your e-ink panel needs to fetch from outside your LAN (e.g., a panel at a rel
 
 See `.env.example` for all options. Key variables:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `7000` | Server port |
-| `CONFIG_DIR` | `./configs` | Directory for YAML config files |
-| `REFRESH_INTERVAL` | `50 5,8,11,14,17,20 * * *` | Cron schedule for auto-refresh |
-| `CACHE_TTL_MINUTES` | `240` | How long fetched data stays cached (4 hours) |
-| `SHARED_BROWSER_MAX_RENDERS` | `200` | Restart Chromium after this many renders (prevents memory leaks) |
-| `SHARED_BROWSER_MAX_AGE_MINUTES` | `180` | Restart Chromium after this age |
+| Variable                         | Default                    | Description                                                      |
+| -------------------------------- | -------------------------- | ---------------------------------------------------------------- |
+| `PORT`                           | `7000`                     | Server port                                                      |
+| `CONFIG_DIR`                     | `./configs`                | Directory for YAML config files                                  |
+| `REFRESH_INTERVAL`               | `50 5,8,11,14,17,20 * * *` | Cron schedule for auto-refresh                                   |
+| `CACHE_TTL_MINUTES`              | `240`                      | How long fetched data stays cached (4 hours)                     |
+| `SHARED_BROWSER_MAX_RENDERS`     | `200`                      | Restart Chromium after this many renders (prevents memory leaks) |
+| `SHARED_BROWSER_MAX_AGE_MINUTES` | `180`                      | Restart Chromium after this age                                  |
 
 ## Language support
 
 The dashboard supports 13 languages. Set `language` in your YAML config:
 
-| Code | Language | Code | Language |
-|------|----------|------|----------|
-| `en` | English | `de` | German |
-| `nl` | Dutch | `fr` | French |
-| `ro` | Romanian | `es` | Spanish |
-| `it` | Italian | `pl` | Polish |
-| `hu` | Hungarian | `sv` | Swedish |
-| `pt` | Portuguese | `cs` | Czech |
-| `el` | Greek | | |
+| Code | Language   | Code | Language |
+| ---- | ---------- | ---- | -------- |
+| `en` | English    | `de` | German   |
+| `nl` | Dutch      | `fr` | French   |
+| `ro` | Romanian   | `es` | Spanish  |
+| `it` | Italian    | `pl` | Polish   |
+| `hu` | Hungarian  | `sv` | Swedish  |
+| `pt` | Portuguese | `cs` | Czech    |
+| `el` | Greek      |      |          |
 
 Day names, labels, and weather terms are translated at display time.
 
@@ -391,11 +411,11 @@ A shared Chromium instance is reused across renders and recycled after 200 rende
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| Panel won't connect to WiFi | Verify WiFi creds, ensure 2.4 GHz (ESP32 doesn't support 5 GHz) |
-| Image not loading | `curl http://your-server:7000/YOUR_ID.png` to test the server |
-| Display showing garbled image | Normal on first boot — press the refresh button |
-| Battery draining too fast | Increase `sleep_duration` in ESPHome config; reduce `update_interval` |
-| Caren fetcher failing | Check TOTP secret is correct (16-32 char Base32); check env var names match the YAML |
+| Problem                              | Solution                                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------------------- |
+| Panel won't connect to WiFi          | Verify WiFi creds, ensure 2.4 GHz (ESP32 doesn't support 5 GHz)                       |
+| Image not loading                    | `curl http://your-server:7000/YOUR_ID.png` to test the server                         |
+| Display showing garbled image        | Normal on first boot — press the refresh button                                       |
+| Battery draining too fast            | Increase `sleep_duration` in ESPHome config; reduce `update_interval`                 |
+| Caren fetcher failing                | Check TOTP secret is correct (16-32 char Base32); check env var names match the YAML  |
 | Server crashes after running a while | The shared browser recycles automatically. If not, check `SHARED_BROWSER_MAX_RENDERS` |
