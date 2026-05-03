@@ -1095,6 +1095,7 @@ async function handleRequest(req: Request): Promise<Response> {
         return new Response(pngEntry.buffer as unknown as BodyInit, {
           headers: {
             "Content-Type": "image/png",
+            "Content-Length": String((pngEntry.buffer as Buffer).byteLength),
             "Cache-Control": "no-cache, no-store, must-revalidate",
             Pragma: "no-cache",
             Expires: "0",
