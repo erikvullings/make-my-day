@@ -2,6 +2,8 @@
 
 A server that generates your agenda, weather, daily quotes or jokes as dashboard images for [Seeed reTerminal E1001](https://www.seeedstudio.com/reTerminal-E1001-p-5736.html) (7.5" B&W e-ink), [E1002](https://www.seeedstudio.com/reTerminal-E1002-p-6044.html) (7.3" 6-color e-ink) displays, and browsers. Dashboards are configured via YAML files with random, unguessable IDs (the same model as WeTransfer links) and are updated every couple of hours. The browser version can also be installed as Progressive Web App (PWA) on your phone, table or desktop.
 
+<img width="1083" height="1486" alt="image" src="https://github.com/user-attachments/assets/dc127395-340b-4bbe-8058-8b0daeafd4c1" />
+
 ## What it does
 
 Create a YAML config → the server renders a dashboard image → your e-ink panel fetches it periodically.
