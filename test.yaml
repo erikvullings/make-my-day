@@ -1,0 +1,49 @@
+esphome:
+  name: reterminal-test
+  on_boot:
+    priority: 600.0 
+    then:
+      - lambda: |-
+          // Native ESP-IDF GPIO control for GPIO12 (Reset Pin)
+          gpio_config_t io_conf;
+          io_conf.intr_type = GPIO_INTR_DISABLE;
+          io_conf.mode = GPIO_MODE_OUTPUT;
+          io_conf.pin_bit_mask = (1ULL << 12);
+          io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+          io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+          gpio_config(&io_conf);
+
+          // Force the reset pulse
+          gpio_set_level(GPIO_NUM_12, 0);
+          vTaskDelay(pdMS_TO_TICKS(200)); 
+          gpio_set_level(GPIO_NUM_12, 1);
+          ESP_LOGI("test", "ESP-IDF Hardware reset pulse sent to GPIO12");
+      - delay: 500ms
+      - component.update: epaper_display
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+
+spi:
+  clk_pin: GPIO7
+  mosi_pin: GPIO9
+
+display:
+  - platform: epaper_spi
+    id: epaper_display
+    model: Seeed-reTerminal-E1002
+    cs_pin: GPIO10
+    dc_pin: GPIO11
+    busy_pin: 
+      number: GPIO13
+      inverted: true
+    reset_pin: GPIO12
+    full_update_every: 1
+    data_rate: 1MHz
+    update_interval: never
+    lambda: |-
+      it.fill(Color::WHITE);
+      it.filled_rectangle(40, 40, 300, 300, Color(255, 0, 0));
+      ESP_LOGI("test", "Red rectangle drawing command sent!");

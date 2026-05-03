@@ -1,0 +1,189 @@
+/* ── Theme tokens (mirrors styles.css) ───────────────────────────────────── */
+:root {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+  --card-bg: #ffffff;
+  --border-color: #000000;
+  --border-width: 2px;
+  --border-radius: 14px;
+  --accent-color: #000000;
+  --muted-color: #000000;
+  --subtle-border: #ccc;
+  --font-family: "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace;
+
+  /* Font-size variables — overridden at runtime by dashboard-week.js */
+  --fs-header: 19px;
+  --fs-day: 17px;
+  --fs-item: 15px;
+  --fs-weather: 14px;
+
+  --week-item-gap: 8px;
+}
+
+[data-theme="color"] {
+  --text-color: #1a1a1a;
+  --border-color: #0000ff;
+  --border-width: 3px;
+  --border-radius: 8px;
+  --accent-color: #0000ff;
+  --muted-color: #333;
+  --subtle-border: #eee;
+  --font-family: "Segoe UI", Arial, sans-serif;
+  --week-item-gap: 6px;
+}
+
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ── Base ────────────────────────────────────────────────────────────────── */
+html, body {
+  width: 800px;
+  height: 480px;
+  font-family: var(--font-family);
+  font-weight: bold;
+  background: var(--bg-color);
+  color: var(--text-color);
+  overflow: hidden;
+  -webkit-font-smoothing: none;
+  text-rendering: optimizeSpeed;
+}
+
+[data-aa="true"] body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#app {
+  height: 100%;
+}
+
+.container-full {
+  display: flex;
+  height: 100%;
+  padding: 8px;
+}
+
+/* ── Card ────────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--card-bg);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 10px;
+  width: 100%;
+}
+
+.card-header {
+  font-size: var(--fs-header);
+  font-weight: bold;
+  color: var(--accent-color);
+  border-bottom: 2px solid var(--accent-color);
+  padding-bottom: 3px;
+  margin-bottom: 6px;
+}
+
+/* ── Week layout ─────────────────────────────────────────────────────────── */
+.week-container {
+  display: flex;
+  gap: 16px;
+}
+
+.week-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.week-day {
+  padding: 4px 6px;
+  border: 1px solid var(--subtle-border);
+  border-radius: 4px;
+}
+
+[data-theme="bw"] .week-day {
+  border: none;
+  border-radius: 0;
+}
+
+[data-theme="bw"] .week-item {
+  border-bottom: none;
+}
+
+.week-day-header {
+  font-size: var(--fs-day);
+  font-weight: bold;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.week-day-header > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.week-day.today .week-day-header > span:first-child {
+  text-decoration: underline;
+}
+
+.week-day-weather {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--fs-item);
+  font-weight: normal;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.week-day-weather svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ── Agenda items ────────────────────────────────────────────────────────── */
+.week-item {
+  font-size: var(--fs-item);
+  padding: 2px 0;
+  display: flex;
+  gap: var(--week-item-gap);
+  border-bottom: 1px solid var(--subtle-border);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.week-item:last-child {
+  border-bottom: none;
+}
+
+.week-time {
+  font-weight: bold;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.week-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.week-no-events {
+  font-size: var(--fs-item);
+  font-style: italic;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.cache-time {
+  font-size: var(--fs-weather);
+  text-align: right;
+  margin-top: 4px;
+}

@@ -1,0 +1,349 @@
+:root {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+  --card-bg: #ffffff;
+  --border-color: #000000;
+
+  /*
+   * Font-size CSS variables.
+   * Default values match the 'large' preset (suitable for 80+ users).
+   * These are overridden at runtime by dashboard-e1001.js based on
+   * the `fontSize` field in the YAML config.
+   *
+   * Presets  (header / day / item / weather / quote — all in px):
+   *   small  : 12 / 10 /  9 /  9 / 10
+   *   medium : 14 / 12 / 11 / 10 / 11
+   *   large  : 16 / 14 / 13 / 12 / 13  ← default
+   *   xlarge : 19 / 17 / 16 / 14 / 15
+   */
+  --fs-header: 19px;
+  --fs-day: 17px;
+  --fs-item: 15px;
+  --fs-weather: 14px;
+  --fs-quote: 15px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 800px;
+  height: 480px;
+  font-family: "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace;
+  font-weight: bold;
+  background: var(--bg-color);
+  color: var(--text-color);
+  overflow: hidden;
+  -webkit-font-smoothing: none;
+  text-rendering: optimizeSpeed;
+}
+
+/* Responsive mode: adapt to mobile/tablet screens */
+[data-responsive="true"] body {
+  width: 100vw;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.container {
+  display: flex;
+  height: 100%;
+  padding: 8px;
+  gap: 8px;
+}
+
+.left-panel {
+  flex: 0 0 56%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Responsive mode: stack panels vertically on narrow screens */
+[data-responsive="true"] .container {
+  flex-direction: column;
+  height: auto;
+  padding: 12px;
+}
+
+[data-responsive="true"] .left-panel {
+  flex: none;
+  min-width: unset;
+  margin-bottom: 12px;
+}
+
+[data-responsive="true"] .right-panel {
+  flex: none;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 2px solid var(--border-color);
+  padding: 10px;
+}
+
+/* Agenda card stretches to fill the full left panel. */
+.agenda-card {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Responsive mode: agenda card should not grow unbounded */
+[data-responsive="true"] .agenda-card {
+  flex: none;
+  max-height: 50vh;
+}
+
+.card-header {
+  font-size: var(--fs-header);
+  font-weight: bold;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 3px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+/* Date shown in the top-right of the agenda card header — inherits bold/size. */
+.card-header-date {
+  font-weight: bold;
+}
+
+/* ── Agenda ──────────────────────────────────────────────────── */
+
+.agenda-day {
+  margin-bottom: 8px;
+}
+
+.day-header {
+  font-size: var(--fs-day);
+  font-weight: bold;
+  margin: 8px 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Remove top margin for the first day in the list. */
+.agenda-day:first-child .day-header {
+  margin-top: 0;
+}
+
+/* Remove the `.day-header.today` block — regular day name is used for all days. */
+
+/* Each agenda item: timestamp and title on a single line. */
+.agenda-item {
+  display: flex;
+  gap: 4px;
+  font-size: var(--fs-item);
+  padding: 2px 0;
+  border-bottom: 1px solid #ccc;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Responsive mode: allow text wrapping */
+[data-responsive="true"] .agenda-item {
+  white-space: normal;
+  flex-wrap: wrap;
+}
+
+.agenda-item:last-child {
+  border-bottom: none;
+}
+
+.agenda-item .time {
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.agenda-item .title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.no-agenda {
+  font-size: var(--fs-item);
+  font-style: italic;
+}
+
+/* ── Weather ─────────────────────────────────────────────────── */
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.weather-icon {
+  font-size: 26px;
+}
+
+/* Temp and humidity sit side-by-side, baseline-aligned. */
+.weather-temp-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.weather-temp {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.weather-humidity {
+  font-size: var(--fs-weather);
+}
+
+.weather-details {
+  font-size: var(--fs-weather);
+}
+
+/* Condition left, wind right on one line. */
+.weather-condition-wind {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sun-times {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.sun-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sun-item svg {
+  vertical-align: middle;
+}
+
+/* ── Quote & Joke ────────────────────────────────────────────── */
+
+/*
+ * Quote and joke cards: no text header.  A small SVG icon sits on the top-left
+ * of the card's border via absolute positioning.  The card uses overflow:visible
+ 
+
+/* Responsive mode: quote/joke cards should not grow excessively */
+[data-responsive="true"] .quote-card {
+  flex: none;
+  min-height: auto;
+  max-height: none;
+}* so the icon can extend above the border; inner content has overflow:hidden.
+ */
+.quote-card {
+  position: relative;
+  flex: 1;
+  overflow: visible;
+}
+
+/* White gap punched into the top border so the icon appears to sit on it. */
+.quote-card::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -3px;
+  width: 30px;
+  height: 18px;
+  background: var(--bg-color);
+}
+
+.card-corner-icon {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  width: 30px;
+  height: 17px;
+  background: white;
+  display: flex;
+  align-items: center;
+  padding: 1px 3px;
+}
+
+.card-corner-icon svg {
+  fill: var(--text-color);
+}
+
+/* Responsive mode: allow quote text to wrap naturally */
+[data-responsive="true"] .quote-text {
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+/* Inner wrapper clips overflowing quote/joke text. */
+.quote-content {
+  height: 100%;
+  overflow: hidden;
+  padding-top: 4px;
+}
+
+.quote-text {
+  font-size: var(--fs-quote);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.quote-author {
+  font-size: var(--fs-weather);
+  margin-top: 6px;
+  text-align: right;
+}
+
+/* ── Medication ──────────────────────────────────────────────── */
+
+.med-list {
+  list-style: none;
+  height: 100%;
+  overflow: hidden;
+}
+
+.med-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: var(--fs-quote);
+  padding: 2px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.med-item:last-child {
+  border-bottom: none;
+}
+
+.med-time {
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.med-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.med-schedule {
+  font-size: var(--fs-item);
+  opacity: 0.7;
+  flex-shrink: 0;
+}

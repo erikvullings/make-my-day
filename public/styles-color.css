@@ -1,0 +1,274 @@
+:root {
+  --bg-color: #ffffff;
+  --text-color: #1a1a1a;
+  --accent-color: #0066cc;
+  --card-bg: #ffffff;
+  --border-color: #0066cc;
+  --warning-color: #ff6b00;
+  --success-color: #00aa00;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: #ffffff;
+  width: 800px;
+  height: 480px;
+  width: 800px;
+  height: 480px;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+  overflow: hidden;
+}
+
+.container {
+  display: flex;
+  height: 100%;
+  width: 800px;
+  padding: 10px;
+  gap: 10px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.left-panel {
+  flex: 0 0 calc(55% - 5px);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.right-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.card-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-color);
+  margin-bottom: 8px;
+  border-bottom: 2px solid var(--accent-color);
+  padding-bottom: 4px;
+}
+
+.agenda-day {
+  margin-bottom: 8px;
+}
+
+.day-header {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.day-weather {
+  font-size: 12px;
+  font-weight: 400;
+  color: #666;
+}
+
+.agenda-item {
+  font-size: 11px;
+  padding: 2px 0;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agenda-item .time {
+  font-weight: 600;
+  min-width: 40px;
+  color: #333;
+}
+
+.agenda-item .title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agenda-item:last-child {
+  border-bottom: none;
+}
+
+.time {
+  font-weight: 600;
+  min-width: 45px;
+  color: #555;
+}
+
+.weather-card {
+  flex: 0 0 auto;
+}
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.weather-icon {
+  font-size: 32px;
+}
+
+.weather-temp {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.weather-details {
+  font-size: 11px;
+  color: #666;
+}
+
+.weather-wind-sun-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+}
+
+.sun-times {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.sun-icon {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.quote-card {
+  position: relative;
+  flex: 1;
+  overflow: visible;
+}
+
+/* White gap punched into the top border so the icon appears to sit on it. */
+.quote-card::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -3px;
+  width: 30px;
+  height: 18px;
+  background: white;
+}
+
+.card-corner-icon {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  width: 30px;
+  height: 17px;
+  background: white;
+  display: flex;
+  align-items: center;
+  padding: 1px 3px;
+}
+
+.card-corner-icon svg {
+  fill: currentColor;
+}
+
+/* Inner wrapper clips overflowing quote/joke text. */
+.quote-content {
+  height: 100%;
+  overflow: hidden;
+  padding-top: 4px;
+}
+
+.quote-text {
+  font-size: 12px;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.quote-author {
+  font-size: 11px;
+  color: #666;
+  margin-top: 6px;
+  text-align: right;
+}
+
+.agenda-card {
+  flex: 1;
+}
+
+/* ── Medication ──────────────────────────────────────────────── */
+
+.med-list {
+  list-style: none;
+  height: 100%;
+  overflow: hidden;
+}
+
+.med-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+  padding: 2px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.med-item:last-child {
+  border-bottom: none;
+}
+
+.med-time {
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.med-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.med-schedule {
+  font-size: 11px;
+  color: #888;
+  flex-shrink: 0;
+}
+
+.no-agenda {
+  font-size: 12px;
+  color: #888;
+  font-style: italic;
+}

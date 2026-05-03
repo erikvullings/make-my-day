@@ -1,0 +1,110 @@
+title: "My Week"
+theme: color
+
+labels:
+  agenda: "Agenda"
+  week: "Week Overview"
+  noEvents: "No events"
+
+agenda:
+  - date: "2026-03-30"
+    dayName: "Mon"
+    weather:
+      temp: 14
+      icon: "⛅"
+      condition: "Partly Cloudy"
+      humidity: 65
+      wind: 12
+    items:
+      - time: "09:00"
+        title: "Team Standup"
+      - time: "11:00"
+        title: "Project Review"
+      - time: "14:00"
+        title: "Client Call"
+      - time: "16:30"
+        title: "1:1 with Manager"
+      - time: "18:00"
+        title: "Gym"
+
+  - date: "2026-03-31"
+    dayName: "Tue"
+    weather:
+      temp: 16
+      icon: "☀️"
+      condition: "Sunny"
+      humidity: 60
+      wind: 8
+    items:
+      - time: "10:00"
+        title: "Sprint Planning"
+      - time: "13:00"
+        title: "Lunch with Team"
+
+  - date: "2026-04-01"
+    dayName: "Wed"
+    weather:
+      temp: 15
+      icon: "🌧️"
+      condition: "Rain"
+      humidity: 80
+      wind: 18
+    items:
+      - time: "09:00"
+        title: "All Hands"
+      - time: "11:00"
+        title: "One-on-One"
+
+  - date: "2026-04-02"
+    dayName: "Thu"
+    weather:
+      temp: 18
+      icon: "☀️"
+      condition: "Sunny"
+      humidity: 55
+      wind: 10
+    items:
+      - time: "10:00"
+        title: "Personal Errands"
+      - time: "18:00"
+        title: "Dinner"
+
+  - date: "2026-04-03"
+    dayName: "Fri"
+    weather:
+      temp: 17
+      icon: "🌤️"
+      condition: "Mostly Sunny"
+      humidity: 50
+      wind: 15
+    items:
+      - time: "09:00"
+        title: "Team Sync"
+      - time: "11:30"
+        title: "Dentist"
+      - time: "15:00"
+        title: "Feature Demo"
+
+  - date: "2026-04-04"
+    dayName: "Sat"
+    weather:
+      temp: 20
+      icon: "☀️"
+      condition: "Sunny"
+      humidity: 45
+      wind: 20
+    items:
+      - time: "10:00"
+        title: "Market"
+
+  - date: "2026-04-05"
+    dayName: "Sun"
+    weather:
+      temp: 19
+      icon: "⛅"
+      condition: "Partly Cloudy"
+      humidity: 55
+      wind: 12
+    items:
+      - time: "14:00"
+        title: "Hike"

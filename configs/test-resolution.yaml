@@ -1,0 +1,62 @@
+title: "Test Resolution"
+theme: color
+width: 640
+height: 320
+
+labels:
+  agenda: "Agenda"
+  weather: "Weather"
+  medication: "Medication"
+  noEvents: "No events scheduled"
+  humidity: "Humidity"
+  wind: "Wind"
+
+agenda:
+  - date: "2026-03-29"
+    dayName: "Sunday"
+    weather:
+      temp: 12
+      icon: "🌧️"
+      condition: "Rain"
+    items:
+      - time: "10:00"
+        title: "Brunch"
+
+  - date: "2026-03-30"
+    dayName: "Monday"
+    weather:
+      temp: 14
+      icon: "⛅"
+      condition: "Cloudy"
+    items:
+      - time: "09:00"
+        title: "Team Standup"
+      - time: "11:00"
+        title: "Project Review"
+      - time: "14:00"
+        title: "Client Call"
+      - time: "16:30"
+        title: "1:1 with Manager"
+      - time: "18:00"
+        title: "Gym"
+
+weather:
+  temp: 18
+  tempUnit: "C"
+  condition: "Partly Cloudy"
+  icon: "⛅"
+  humidity: 65
+  wind: 12
+  windUnit: "km/h"
+
+medication:
+  - time: "08:00"
+    person: "Emma"
+    name: "Vitamin D"
+  - time: "12:00"
+    name: "Blood Pressure Med"
+  - time: "20:00"
+    name: "Magnesium"
+  - time: "22:00"
+    person: "Emma"
+    name: "Melatonin"

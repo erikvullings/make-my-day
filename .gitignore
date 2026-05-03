@@ -1,0 +1,27 @@
+node_modules
+
+# Build outputs
+public/*.js
+public/*.js.map
+public/favicon/
+
+# Credentials
+.make-my-day/
+credentials.json
+
+# Environment
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+.env
+
+# Caren session tokens (contain auth cookies — never commit)
+configs/.caren-sessions/
+mia-*
+ioan-*
+mcp_servers.json
+secrets.yaml
+.esphome

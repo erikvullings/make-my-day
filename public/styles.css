@@ -1,0 +1,440 @@
+/* ── Theme tokens ────────────────────────────────────────────── */
+/*
+ * BW values are the defaults (:root).
+ * Color theme overrides only what differs.
+ */
+:root {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+  --card-bg: #ffffff;
+  --border-color: #000000;
+  --border-width: 2px;
+  --border-radius: 14px;
+  --accent-color: #000000; /* card-header text + underline */
+  --muted-color: #000000; /* secondary text (weather details etc.) */
+  --subtle-border: #ccc; /* item / med dividers */
+  --font-family:
+    "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace;
+
+  --card-padding: 10px;
+  --container-padding: 8px;
+  --container-gap: 8px;
+  --right-panel-gap: 10px;
+  --agenda-item-gap: 8px;
+
+  --weather-icon-size: 26px;
+  --weather-temp-size: 22px;
+  --weather-main-gap: 10px;
+  --weather-main-mb: 6px;
+
+  /*
+   * Font-size CSS variables.
+   * Default values match the 'large' preset (suitable for 80+ users).
+   * These are overridden at runtime by dashboard.js based on
+   * the `fontSize` field in the YAML config.
+   *
+   * Presets  (header / day / item / weather / quote — all in px):
+   *   small  : 12 / 10 /  9 /  9 / 10
+   *   medium : 14 / 12 / 11 / 10 / 11
+   *   large  : 16 / 14 / 13 / 12 / 13  ← default
+   *   xlarge : 19 / 17 / 16 / 14 / 15
+   */
+  --fs-header: 19px;
+  --fs-day: 17px;
+  --fs-item: 15px;
+  --fs-weather: 14px;
+  --fs-quote: 13px;
+}
+
+[data-theme="color"] {
+  --text-color: #1a1a1a;
+  --border-color: #0000ff;
+  --border-width: 3px;
+  --border-radius: 8px;
+  --accent-color: #0000ff;
+  --muted-color: #333;
+  --subtle-border: #eee;
+  --font-family: "Segoe UI", Arial, sans-serif;
+
+  --card-padding: 10px;
+  --container-padding: 12px;
+  --container-gap: 10px;
+  /* right-panel-gap intentionally kept at 10px (same as BW) */
+  --agenda-item-gap: 4px;
+
+  --weather-icon-size: 32px;
+  --weather-temp-size: 28px;
+  --weather-main-gap: 6px;
+  --weather-main-mb: 8px;
+}
+
+/* ── Reset ───────────────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ── Base ────────────────────────────────────────────────────── */
+body {
+  width: 800px;
+  height: 480px;
+  font-family: var(--font-family);
+  font-weight: bold;
+  background: var(--bg-color);
+  color: var(--text-color);
+  overflow: hidden;
+  -webkit-font-smoothing: none;
+  text-rendering: optimizeSpeed;
+}
+
+/* e1001 supports anti-aliasing; set antiAliasing: true in its config. */
+[data-aa="true"] body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* #app must have explicit height so .container { height: 100% } resolves correctly. */
+#app {
+  height: 100%;
+}
+
+.container {
+  display: flex;
+  height: 100%;
+  padding: var(--container-padding);
+  gap: var(--container-gap);
+}
+
+[data-theme="color"] .container {
+  padding: var(--container-padding) 8px 8px 8px;
+}
+
+.left-panel {
+  flex: 0 0 56%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.right-panel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--right-panel-gap);
+}
+
+.card {
+  background: var(--card-bg);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--card-padding);
+}
+
+/* ── Agenda card ─────────────────────────────────────────────── */
+
+/* Agenda card stretches to fill the full left panel. */
+.agenda-card {
+  flex: 1;
+  overflow: hidden;
+}
+
+.card-header {
+  font-size: var(--fs-header);
+  font-weight: bold;
+  color: var(--accent-color);
+  border-bottom: 2px solid var(--accent-color);
+  padding-bottom: 3px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+/* Date shown in the top-right of the agenda card header. */
+.card-header-date {
+  font-weight: bold;
+}
+
+/* ── Agenda ──────────────────────────────────────────────────── */
+
+.agenda-day {
+  margin-bottom: 8px;
+}
+
+.day-header {
+  font-size: var(--fs-day);
+  font-weight: bold;
+  margin: 8px 0 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.day-header > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.day-weather {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--fs-item);
+  font-weight: normal;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.day-weather svg {
+  width: 32px;
+  height: 32px;
+}
+
+/* Remove top margin for the first day in the list. */
+.agenda-day:first-child .day-header {
+  margin-top: 0;
+}
+
+/* Each agenda item: timestamp and title on a single line. */
+.agenda-item {
+  display: flex;
+  gap: var(--agenda-item-gap);
+  font-size: var(--fs-item);
+  padding: 2px 0;
+  border-bottom: 1px solid var(--subtle-border);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.agenda-item:last-child {
+  border-bottom: none;
+}
+
+.agenda-item .time {
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.agenda-item .title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.no-agenda {
+  font-size: var(--fs-item);
+  font-style: italic;
+}
+
+/* ── Weather ─────────────────────────────────────────────────── */
+
+.weather-card {
+  flex: 0 0 auto;
+}
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: var(--weather-main-gap);
+  margin-bottom: 4px;
+}
+
+.weather-icon {
+  font-size: var(--weather-icon-size);
+  display: flex;
+  align-items: center;
+}
+
+.weather-icon svg {
+  width: var(--weather-icon-size);
+  height: var(--weather-icon-size);
+}
+
+/* Temp and humidity sit side-by-side, baseline-aligned. */
+.weather-temp-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.weather-temp {
+  font-size: var(--weather-temp-size);
+  font-weight: bold;
+}
+
+.weather-humidity {
+  font-size: var(--fs-weather);
+  color: var(--muted-color);
+}
+
+.weather-details {
+  font-size: var(--fs-weather);
+  color: var(--muted-color);
+}
+
+/* Condition left, wind right on one line. */
+.weather-condition-wind {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sun-times {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: var(--fs-weather);
+  flex-shrink: 0;
+}
+
+.sun-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sun-item svg {
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+}
+
+/* ── Quote & Joke ────────────────────────────────────────────── */
+
+/*
+ * Quote and joke cards: no text header.  A small SVG icon sits on the top-left
+ * of the card's border via absolute positioning.  The card uses overflow:visible
+ * so the icon can extend above the border; inner content has overflow:hidden.
+ */
+.quote-card {
+  position: relative;
+  flex: 1;
+  overflow: visible;
+}
+
+/* Background gap punched into the top border so the icon appears to sit on it. */
+.quote-card::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -3px;
+  width: 30px;
+  height: 18px;
+  background: var(--bg-color);
+}
+
+.card-corner-icon {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  width: 30px;
+  height: 17px;
+  background: var(--bg-color);
+  display: flex;
+  align-items: center;
+  padding: 1px 3px;
+}
+
+.card-corner-icon svg {
+  fill: var(--text-color);
+}
+
+/* Inner wrapper clips overflowing quote/joke text. */
+.quote-content {
+  height: 100%;
+  overflow: hidden;
+  padding-top: 4px;
+}
+
+.quote-text {
+  font-size: var(--fs-quote);
+  font-style: normal;
+  line-height: 1.5;
+}
+
+.quote-author {
+  font-size: var(--fs-weather);
+  margin-top: 6px;
+  text-align: right;
+}
+
+/* ── Medication ──────────────────────────────────────────────── */
+
+.med-list {
+  list-style: none;
+  height: 100%;
+  overflow: hidden;
+}
+
+.med-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: var(--fs-quote);
+  padding: 2px 0;
+  border-bottom: 1px solid var(--subtle-border);
+}
+
+.med-item:last-child {
+  border-bottom: none;
+}
+
+.med-time {
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.med-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.med-schedule {
+  font-size: var(--fs-item);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* ── Responsive (mobile) layout ──────────────────────────────── */
+/*
+ * Activated when the server injects responsive:true into the config,
+ * which sets data-responsive="true" on <html>.
+ * Panels stack vertically and stretch full-width; height is unconstrained.
+ */
+[data-responsive="true"] body {
+  width: 100%;
+  height: auto;
+  overflow: auto;
+}
+
+[data-responsive="true"] #app {
+  height: auto;
+}
+
+[data-responsive="true"] .container {
+  flex-direction: column;
+  height: auto;
+}
+
+[data-responsive="true"] .left-panel,
+[data-responsive="true"] .right-panel {
+  flex: none;
+  width: 100%;
+}
+
+[data-responsive="true"] .agenda-card {
+  overflow: visible;
+}
+
+[data-responsive="true"] .quote-card {
+  flex: none;
+}

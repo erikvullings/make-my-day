@@ -1,0 +1,411 @@
+globals:
+  - id: current_page
+    type: int
+    initial_value: "1"
+    restore_value: true
+  - id: download_finished
+    type: bool
+    initial_value: "false"
+
+substitutions:
+  # Dashboard URL — see .esphome-secrets.example.yaml for setup instructions
+  base_url: !secret dashboard_base_url1
+
+esphome:
+  name: reterminal-e1001
+  friendly_name: reTerminal_E1001
+  on_boot:
+    - priority: 800.0
+      then:
+        - lambda: |-
+            gpio_pullup_en(GPIO_NUM_3);
+            gpio_pullup_en(GPIO_NUM_4);
+            gpio_pullup_en(GPIO_NUM_5);
+    - priority: 600.0
+      then:
+        - lambda: |-
+            // 1. Setup GPIO12 (Reset) and GPIO21 (Battery Enable)
+            gpio_config_t io_conf;
+            io_conf.intr_type = GPIO_INTR_DISABLE;
+            io_conf.mode = GPIO_MODE_OUTPUT;
+            io_conf.pin_bit_mask = (1ULL << 12) | (1ULL << 21);
+            io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+            io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+            gpio_config(&io_conf);
+
+            // 2. Enable Battery Circuit (GPIO21 HIGH)
+            gpio_set_level(GPIO_NUM_21, 1);
+            ESP_LOGI("main", "Battery hardware circuit ENABLED (GPIO21)");
+
+            // 3. Force Display Reset Pulse (GPIO12)
+            gpio_set_level(GPIO_NUM_12, 0);
+            vTaskDelay(pdMS_TO_TICKS(200)); 
+            gpio_set_level(GPIO_NUM_12, 1);
+            ESP_LOGI("main", "Display hardware reset pulse sent (GPIO12)");
+        - delay: 1s
+    - priority: -100
+      then:
+        - lambda: |-
+            uint64_t wakeup_status = esp_sleep_get_ext1_wakeup_status();
+            if (wakeup_status & (1ULL << 4)) { // GPIO4 = Next Page
+              id(current_page) = (id(current_page) >= 2) ? 1 : id(current_page) + 1;
+              ESP_LOGI("main", "Confirmed Wakeup: NEXT button. Page: %d", id(current_page));
+            } else if (wakeup_status & (1ULL << 5)) { // GPIO5 = Previous Page
+              id(current_page) = (id(current_page) <= 1) ? 2 : id(current_page) - 1;
+              ESP_LOGI("main", "Confirmed Wakeup: PREV button. Page: %d", id(current_page));
+            } else if (wakeup_status & (1ULL << 3)) { // GPIO3 = Refresh
+              ESP_LOGI("main", "Confirmed Wakeup: REFRESH. Staying on page: %d", id(current_page));
+            } else {
+              ESP_LOGI("main", "Timer/Other Wakeup. Page: %d", id(current_page));
+            }
+        - script.execute: refresh_and_sleep
+
+output:
+  - platform: gpio
+    pin: GPIO21
+    id: bsp_battery_enable
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_ESP_WIFI_ENABLE_WPA3_SAE: "y"
+      CONFIG_WPA_MBEDTLS_CRYPTO: "y"
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+wifi:
+  # Network credentials are in a secrets file — see .esphome-secrets.example.yaml
+  networks:
+    - ssid: !secret wifi_ssid3
+      password: !secret wifi_password3
+      priority: 100
+
+    - ssid: !secret wifi_ssid2
+      password: !secret wifi_password2
+      priority: 50
+
+  # Enable fallback hotspot so you can still reach the device if main WiFi fails
+  ap:
+    ssid: "reTerminal-Fallback"
+    password: "YourFallbackPassword"  # Change this!
+
+  on_connect:
+    then:
+      - logger.log: "WiFi connected successfully!"
+      # - component.update: dashboard_image
+  on_disconnect:
+    then:
+      - logger.log: "WiFi disconnected"
+
+logger:
+  level: DEBUG
+  # level: WARN
+  hardware_uart: UART0
+
+api:
+  encryption:
+    key: !secret api_encryption_key  # Generate with: esphome generate encryption-key reterminal-e1001.yaml
+
+ota:
+  - platform: esphome
+    password: !secret ota_password  # Choose a strong OTA password
+
+captive_portal:
+
+spi:
+  clk_pin: GPIO7
+  mosi_pin: GPIO9
+  interface: hardware
+
+http_request:
+  verify_ssl: false
+  timeout: 4min
+  watchdog_timeout: 5min
+  useragent: "Mozilla/5.0 (reTerminal-E1001)" # Fake a real browser
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Europe/Amsterdam"
+    # on_time:
+    #   - seconds: 0
+    #     minutes: 0
+    #     hours: 6,9,12,15,18,21
+    #     then:
+    #       - component.update: dashboard_image
+
+deep_sleep:
+  id: deep_sleep_control
+  # Safety window - long enough for the full refresh cycle (download + 120s display delay).
+  # The script calls deep_sleep.enter explicitly when done, so this is just a backstop.
+  run_duration: 10min
+  sleep_duration: 1h
+  esp32_ext1_wakeup:
+    pins:
+      - GPIO3 # Refresh button
+      - GPIO4 # Next Page button
+      - GPIO5 # Previous Page button
+    mode: ANY_LOW # Wake when ANY button is pressed (LOW because inverted)
+
+script:
+  - id: refresh_and_sleep
+    mode: single
+    then:
+      # 1. Wait for WiFi and time (time.has_time is enough to proceed)
+      - logger.log: "Waiting for WiFi and Time..."
+      - wait_until:
+          condition:
+            - wifi.connected:
+            - time.has_time:
+          timeout: 90s
+      - lambda: |-
+          if (!id(sntp_time).now().is_valid()) {
+            ESP_LOGW("main", "Time sync failed. Proceeding with default time...");
+          }
+
+      # --- FORCED BATTERY SEQUENCE ---
+      - output.turn_on: bsp_battery_enable
+      - delay: 200ms # Let the voltage stabilize
+      - component.update: battery_voltage
+      - delay: 200ms # Let the ADC result settle
+      - component.update: battery_level
+      - delay: 200ms # Ensure the template has the new value
+      # -------------------------------
+
+      # Update WiFi signal strength
+      - component.update: wifi_rssi
+      - delay: 100ms
+
+      # - lambda: |-
+      #     auto now = id(sntp_time).now();
+      #     // Check if it's between 11 PM and 7 AM (only if time is actually valid)
+      #     // if (now.is_valid() && (now.hour >= 23 || now.hour < 7)) {
+      #     if (now.is_valid() && (now.hour < 7)) {
+      #       ESP_LOGI("main", "Night time detected. Going back to sleep without update.");
+      #       id(deep_sleep_control).set_sleep_duration(4 * 3600 * 1000); // 4 hours in ms
+      #       id(deep_sleep_control).begin_sleep();
+      #     } else {
+      #       ESP_LOGI("main", "Daytime detected (%02d:%02d). Proceeding with update.", now.hour, now.minute);
+      #     }
+
+      # - logger.log: "Daytime detected. Fetching new image..."
+      - lambda: |-
+          id(download_finished) = false;
+          std::string page_suffix = (id(current_page) == 1) ? "" : "-" + std::to_string(id(current_page));
+          std::string new_url = std::string("${base_url}") + page_suffix + ".png";
+          id(dashboard_image).set_url(new_url.c_str());
+      - component.update: dashboard_image
+      # Wait for download to complete before triggering display update
+      - wait_until:
+          condition:
+            lambda: "return id(download_finished);"
+          timeout: 4min
+
+      - lambda: |-
+          if (!id(download_finished)) {
+            ESP_LOGE("main", "Download timed out or failed. Skipping display update.");
+            id(deep_sleep_control).begin_sleep();
+          }
+      - logger.log: "Download complete. Disable wifi and update display..."
+      - wifi.disable:
+      - delay: 1s
+      - component.update: epaper_display
+
+      # Wait for e-paper to finish its refresh cycle (~30s for 7.50inv2)
+      - delay: 45s
+      - lambda: |-
+          gpio_pullup_en(GPIO_NUM_2);
+          gpio_pullup_en(GPIO_NUM_3);
+          gpio_pullup_en(GPIO_NUM_4);
+      - logger.log: "Refresh done. Going to sleep for 3 hours."
+      - lambda: |-
+          auto now = id(sntp_time).now();
+
+          if (!now.is_valid()) {
+            ESP_LOGW("main", "Time not valid → fallback sleep 3h");
+            id(deep_sleep_control).set_sleep_duration(3 * 3600 * 1000);
+            id(deep_sleep_control).begin_sleep();
+            return;
+          }
+
+          int current_hour = now.hour;
+          int current_min = now.minute;
+          int current_sec = now.second;
+
+          // Your custom wake schedule
+          const int schedule[] = {0, 6, 9, 12, 15, 18, 21};
+          const int schedule_size = sizeof(schedule) / sizeof(schedule[0]);
+
+          int next_hour = -1;
+
+          // Find next scheduled hour
+          for (int i = 0; i < schedule_size; i++) {
+            if (schedule[i] > current_hour) {
+              next_hour = schedule[i];
+              break;
+            }
+          }
+
+          // If none found → wrap to next day (midnight)
+          if (next_hour == -1) {
+            next_hour = 0;
+          }
+
+          int seconds_now = current_hour * 3600 + current_min * 60 + current_sec;
+          int seconds_target = next_hour * 3600;
+
+          int sleep_seconds = seconds_target - seconds_now;
+          if (sleep_seconds <= 0) {
+            sleep_seconds += 24 * 3600;
+          }
+
+          ESP_LOGI("main", "Now: %02d:%02d:%02d", current_hour, current_min, current_sec);
+          ESP_LOGI("main", "Next wake at: %02d:00", next_hour);
+          ESP_LOGI("main", "Sleeping for %d seconds", sleep_seconds);
+
+          id(deep_sleep_control).set_sleep_duration(sleep_seconds * 1000);
+          id(deep_sleep_control).begin_sleep();
+
+sensor:
+  - platform: adc
+    pin: GPIO1
+    name: "Battery Voltage"
+    id: battery_voltage
+    update_interval: never
+    attenuation: 12db
+    filters:
+      - multiply: 2.0
+
+  - platform: template
+    id: battery_level
+    # This takes the voltage and runs it through the Seeed calibration curve
+    lambda: |-
+      if (id(battery_voltage).has_state()) {
+        return id(battery_voltage).state;
+      }
+      return 0.0;
+    update_interval: never # We will control this manually
+    filters:
+      - calibrate_linear:
+          - 4.15 -> 100.0
+          - 3.96 -> 90.0
+          - 3.91 -> 80.0
+          - 3.85 -> 70.0
+          - 3.80 -> 60.0
+          - 3.75 -> 50.0
+          - 3.68 -> 40.0
+          - 3.58 -> 30.0
+          - 3.49 -> 20.0
+          - 3.41 -> 10.0
+          - 3.30 -> 5.0
+          - 3.27 -> 0.0
+      - clamp:
+          min_value: 0
+          max_value: 100
+
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    id: wifi_rssi
+    update_interval: never # Managed by the script
+
+# Page buttons (GPIO4=Next, GPIO5=Prev) are handled via esp32_ext1_wakeup.
+# On boot, the wakeup status lambda detects which button was pressed and
+# updates current_page before fetching the image. No binary_sensor needed.
+
+online_image:
+  - id: dashboard_image
+    format: PNG
+    type: BINARY
+    buffer_size: 65536
+    url: "${base_url}"
+    update_interval: never
+    on_download_finished:
+      - lambda: "id(download_finished) = true;"
+    on_error:
+      - logger.log: "Download failed!"
+
+# Only needed when you are drawing yourself, e.g. for the battery level.
+font:
+  - file: "gfonts://Roboto"
+    id: font_small
+    size: 10
+  - file: "https://github.com/Templarian/MaterialDesign-Webfont/raw/master/fonts/ma\
+      terialdesignicons-webfont.ttf"
+    id: icon_font
+    size: 16
+    glyphs:
+      - "󰤟" # mdi-wifi-strength-1
+      - "󰤢" # mdi-wifi-strength-2
+      - "󰤥" # mdi-wifi-strength-3
+      - "󰤨" # mdi-wifi-strength-4
+      - "󰤯" # mdi-wifi-strength-outline (No signal)
+
+display:
+  - platform: waveshare_epaper
+    id: epaper_display
+    model: 7.50inv2p
+    cs_pin: GPIO10
+    dc_pin: GPIO11
+    reset_pin:
+      number: GPIO12
+      inverted: false
+    busy_pin:
+      number: GPIO13
+      inverted: true
+    full_update_every: 1
+    update_interval: never
+    lambda: |-
+      // Clear screen to "White" (which is effectively Black in your inverted logic)
+      it.fill(Color::WHITE);
+      // 1. Draw the Background Image
+      if (id(dashboard_image).is_ready()) {
+        // SWAPPED COLORS to fix inversion
+        it.image(0, 0, id(dashboard_image), Color::BLACK, Color::WHITE);
+        // it.image(0, 0, id(dashboard_image));
+      } else {
+        it.fill(Color::WHITE);
+        it.filled_rectangle(40, 40, 300, 300, Color::BLACK);
+      }
+
+      // --- WIFI ICON LOGIC ---
+      int wx = 705; // Positioned to the left of the battery text
+      int wy = 12;
+
+      const char* wifi_icon = "\U000F092F"; // Default: No signal
+      if (id(wifi_rssi).has_state()) {
+        float rssi = id(wifi_rssi).state;
+        if (rssi >= -60) wifi_icon = "\U000F0928";      // 4 bars
+        else if (rssi >= -70) wifi_icon = "\U000F0925"; // 3 bars
+        else if (rssi >= -80) wifi_icon = "\U000F0922"; // 2 bars
+        else if (rssi >= -90) wifi_icon = "\U000F091F"; // 1 bar
+      }
+      it.print(wx, wy, id(icon_font), Color::WHITE, wifi_icon);
+
+      // 2. The Micro Battery Icon (Top Right: 775, 2)
+      // We don't draw a background box, just the icon itself
+      int x = 762; // X position
+      int y = 14;   // Y position
+      int w = 20;  // Width
+      int h = 10;  // Height
+
+      // Draw battery outline (Black)
+      it.rectangle(x, y, w, h, Color::WHITE);
+      it.filled_rectangle(x + w, y + 3, 2, 4, Color::WHITE); // The "nub"
+
+      // Calculate fill based on the template sensor
+      float pct = id(battery_level).state;
+      if (std::isnan(pct)) pct = 0.0;
+      int fill_w = (int)((pct / 100.0) * (w - 4));
+
+      // If pct is 0, let's draw at least 1 pixel so we know the code is running
+      if (fill_w < 1 && pct >= 0) fill_w = 1;
+
+      if (fill_w > 0) {
+        it.filled_rectangle(x + 2, y + 2, fill_w, h - 4, Color::WHITE);
+      }
+      // Add the percentage text (requires a font, see below)
+      it.printf(x - 30, y - 2, id(font_small), Color::WHITE, "%d%%", (int)pct);

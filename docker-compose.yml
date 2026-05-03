@@ -1,0 +1,14 @@
+services:
+  make-my-day:
+    build: .
+    container_name: make-my-day
+    restart: unless-stopped
+    ports:
+      # Bind only to loopback so Cosmos proxies it; the app is not directly
+      # reachable from the network. Use 0.0.0.0:7000:7000 if you also want
+      # direct LAN access (e.g. for ESPHome panels on the local network).
+      - "127.0.0.1:7000:${PORT:-7000}"
+    env_file: .env
+    volumes:
+      # Persist configs outside the container so they survive rebuilds.
+      - ./configs:/app/configs

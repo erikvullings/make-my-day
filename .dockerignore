@@ -1,0 +1,23 @@
+node_modules
+.env
+*.png
+
+# Built JS bundles — regenerated inside the container by `bun run build`.
+public/dashboard.js
+public/dashboard-week.js
+public/favicon
+
+# Dev / editor artefacts
+.git
+*.md
+debug-*.ts
+reterminal-e1001.yaml
+reterminal-e1002.yaml
+test.yaml
+.env.example
+.serena
+docker-compose.yml
+pnpm-lock.yaml
+package-lock.yaml
+requirements.txt
+Dockerfile
