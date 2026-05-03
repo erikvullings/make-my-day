@@ -1,10 +1,12 @@
 # Make My Day
 
-A server that generates dashboard images for [Seeed reTerminal E1001](https://www.seeedstudio.com/reTerminal-E1001-p-5736.html) (7.5" B&W e-ink) and [E1002](https://www.seeedstudio.com/reTerminal-E1002-p-6044.html) (7.3" 6-color e-ink) displays. Dashboards are configured via YAML files with random, unguessable IDs (the same model as WeTransfer links).
+A server that generates your agenda, weather, daily quotes or jokes as dashboard images for [Seeed reTerminal E1001](https://www.seeedstudio.com/reTerminal-E1001-p-5736.html) (7.5" B&W e-ink), [E1002](https://www.seeedstudio.com/reTerminal-E1002-p-6044.html) (7.3" 6-color e-ink) displays, and browsers. Dashboards are configured via YAML files with random, unguessable IDs (the same model as WeTransfer links) and are updated every couple of hours. The browser version can also be installed as Progressive Web App (PWA) on your phone, table or desktop.
 
 ## What it does
 
-Create a YAML config → the server renders a dashboard image → your e-ink panel fetches it periodically. The dashboard can show:
+Create a YAML config → the server renders a dashboard image → your e-ink panel fetches it periodically.
+
+The dashboard can show:
 
 - **Agenda** from Caren.nl (Dutch care planner), Google Calendar, or any website via headless scraper
 - **Live weather** from Open-Meteo (free, no API key needed)
@@ -78,6 +80,7 @@ cp reterminal-e1002.yaml my-panel.yaml
 Edit your `my-panel.yaml` and change the `dashboard_base_url` in the **secrets section** (see below). You'll need to know your server's IP address and your dashboard ID.
 
 **Example URLs:**
+
 - Local: `http://192.168.1.100:7000/my-dashboard`
 - Public (Cloudflare): `https://dashboard.example.com/my-dashboard`
 
@@ -85,16 +88,18 @@ Edit your `my-panel.yaml` and change the `dashboard_base_url` in the **secrets s
 
 The ESPHome configs use `!secret` references to keep credentials out of the main YAML. You have two options:
 
-**Option A: Use a secrets file (recommended)**
+#### Option A: Use a secrets file (recommended)
 
 1. Copy the example secrets file: `cp .esphome-secrets.example.yaml secrets.yaml`
 2. Edit `secrets.yaml` and fill in your WiFi credentials, dashboard URL, and generate your API key:
+
    ```bash
    esphome generate encryption-key my-panel.yaml
    ```
+
 3. Keep `secrets.yaml` private — never commit it.
 
-**Option B: Inline values (simpler for beginners)**
+#### Option B: Inline values (simpler for beginners)
 
 Replace every `!secret secret_name` in the YAML with the actual value directly. E.g.:
 
@@ -121,7 +126,7 @@ After flashing, the panel will connect to your WiFi. Find its IP address in your
 
 ### Basic config
 
-Create a file `configs/my-dashboard.yaml`:
+Create a file `configs/my-dashboard.yaml`, where the filename is also used as URL, so if your server is on the Internet, make sure to make the URL impossible to guess:
 
 ```yaml
 title: "My Day"
@@ -311,6 +316,7 @@ bun install && bun start            # Bun (faster dev, avoid for long-running)
 For LAN-only panels, skip external hosting entirely.
 
 Update your ESPHome config to use your local IP:
+
 ```yaml
 base_url: "http://192.168.1.100:7000/my-dashboard"
 ```
@@ -332,6 +338,7 @@ Dockerfile is provided — no registry needed. The server reads from `./configs`
 If your e-ink panel needs to fetch from outside your LAN (e.g., a panel at a relative's house), expose the server via:
 
 - **[Nginx](https://nginx.org/) / [Caddy](https://caddyserver.com/)** — a reverse proxy with a domain and TLS. Example Nginx:
+
   ```nginx
   server {
       listen 443 ssl;
@@ -342,6 +349,7 @@ If your e-ink panel needs to fetch from outside your LAN (e.g., a panel at a rel
       }
   }
   ```
+
 - **[Cosmos Server](https://cosmos-cloud.io/)** — set up a proxy route with automatic TLS (Let's Encrypt). Set the source to `dashboard.yourdomain.com`, target to `http://localhost:7000`, and mark as **public** (safe because dashboard IDs are random opaque strings).
 - **[Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-tunnels/)** — `cloudflared tunnel --url http://localhost:7000`
 - **[Tailscale Funnel](https://tailscale.com/kb/1242/tailscale-funnel)** — `tailscale funnel 7000`
@@ -379,7 +387,7 @@ Day names, labels, and weather terms are translated at display time.
 
 ## File structure
 
-```
+```bash
 make-my-day/
 ├── server.ts              # Main server (Bun HTTP + Playwright Chromium)
 ├── browser.ts             # Chromium launcher (system browser detection)
@@ -413,7 +421,7 @@ A shared Chromium instance is reused across renders and recycled after 200 rende
 
 | Problem                              | Solution                                                                              |
 | ------------------------------------ | ------------------------------------------------------------------------------------- |
-| Panel won't connect to WiFi          | Verify WiFi creds, ensure 2.4 GHz (ESP32 doesn't support 5 GHz)                       |
+| Panel won't connect to WiFi          | Verify WiFi credentials, ensure 2.4 GHz (ESP32 doesn't support 5 GHz)                 |
 | Image not loading                    | `curl http://your-server:7000/YOUR_ID.png` to test the server                         |
 | Display showing garbled image        | Normal on first boot — press the refresh button                                       |
 | Battery draining too fast            | Increase `sleep_duration` in ESPHome config; reduce `update_interval`                 |
