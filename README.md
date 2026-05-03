@@ -151,6 +151,44 @@ medication:
 | `http://localhost:7000/my-dashboard-2.png` | E-ink image (page 2, week view) |
 | `http://localhost:7000/my-dashboard.html` | Fixed 800×480 HTML (e-ink preview) |
 
+### Complete per-person example
+
+Here's a complete config combining **Caren.nl agenda**, **live weather**, **medication reminders**, and a **daily quote**:
+
+```yaml
+title: "Emma — Weekoverzicht"
+language: nl
+theme: color
+
+fetchers:
+  caren:
+    enabled: true
+    usernameEnvVar: CAREN_EMMA_USERNAME
+    passwordEnvVar: CAREN_EMMA_PASSWORD
+    totpSecretEnvVar: CAREN_EMMA_TOTP_SECRET
+    personId: 12345
+    days: 7
+  weather:
+    enabled: true
+    latitude: 52.3676
+    longitude: 4.9041
+    locationName: "Amsterdam"
+  quote:
+    enabled: true
+    api: zenquotes
+
+medication:
+  - time: "08:00"
+    person: "Emma"
+    name: "Vitamin D"
+    days: [monday, wednesday, friday]
+  - time: "22:00"
+    person: "Emma"
+    name: "Melatonin"
+```
+
+> **Multiple people?** Create a separate YAML config file for each person (e.g. `emma.yaml`, `liam.yaml`) with their own `caren` fetcher and env vars. Use the same dashboard ID in your ESPHome config to always fetch the same person's page.
+
 ## Fetchers (automatic data)
 
 Instead of manually writing agenda items, you can enable fetchers that pull data automatically.
@@ -172,56 +210,14 @@ Weather is also automatically attached to each day in your agenda.
 
 ### Caren.nl (Dutch care planner)
 
-For a complete example, here's a dashboard for a fictive household with **Emma** and **Liam**:
+The server can fetch care plans from [Caren.nl](https://caren.nl) (Dutch care planner). Set up credentials in your `.env` file (see `.env.example`):
 
-```yaml
-title: "Gezin Jansen — Weekoverzicht"
-language: nl
-theme: color
+1. Log into Caren.nl → **Settings → Security → "Extra beveiliging bij het inloggen"**
+2. Enable two-factor auth with an authenticator app (Google Authenticator, Authy, etc.)
+3. Copy the Base32 secret (e.g. `ABCDEFGHIJKLMLNOPQRSTUVWXYX`)
+4. Uncomment and fill in the CAREN env vars in `.env`
 
-fetchers:
-  caren:
-    enabled: true
-    # Credentials are read from environment variables (see .env.example)
-    usernameEnvVar: CAREN_EMMA_USERNAME
-    passwordEnvVar: CAREN_EMMA_PASSWORD
-    totpSecretEnvVar: CAREN_EMMA_TOTP_SECRET
-    # Person ID 12345 is the Caren.nl user ID (find via debug-caren.ts)
-    personId: 12345
-    days: 7
-  caren:
-    enabled: true
-    usernameEnvVar: CAREN_LIAM_USERNAME
-    passwordEnvVar: CAREN_LIAM_PASSWORD
-    totpSecretEnvVar: CAREN_LIAM_TOTP_SECRET
-    personId: 67890
-    days: 7
-
-medication:
-  - time: "08:00"
-    person: "Emma"
-    name: "Vitamin D"
-    days: [monday, wednesday, friday]
-  - time: "08:00"
-    person: "Liam"
-    name: "Asthma inhalator"
-  - time: "22:00"
-    person: "Emma"
-    name: "Melatonin"
-```
-
-**Setting up Caren.nl credentials:**
-
-1. Log into Caren.nl with your account
-2. Go to **Settings → Security → "Extra beveiliging bij het inloggen"**
-3. Enable two-factor auth with an authenticator app (Google Authenticator, Authy, etc.)
-4. Copy the Base32 secret (looks like `ABCDEFGHIJKLMLNOPQRSTUVWXYX`)
-5. Add to your `.env` file:
-   ```bash
-   CAREN_EMMA_USERNAME=emma@example.com
-   CAREN_EMMA_PASSWORD=yourpassword
-   CAREN_EMMA_TOTP_SECRET=BASE32SECRETHERE
-   ```
+The `personId` is a numeric Caren.nl user ID. You can find it by visiting `https://caren.nl` while logged in — it appears in the URL path `/people/<id>/`.
 
 The server handles login, TOTP code generation, and session caching automatically. If a session expires, it re-logs in transparently.
 
