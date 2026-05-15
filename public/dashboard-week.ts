@@ -49,6 +49,8 @@ interface DashboardConfig {
   fontSize?: FontSize;
   theme?: "color" | "bw";
   antiAliasing?: boolean;
+  /** Agenda-only vocabulary replacements applied during rendering. */
+  agendaVocabulary?: Record<string, string>;
   labels?: Labels;
   agenda?: DayAgenda[];
   cacheTime?: string;
@@ -209,6 +211,28 @@ const leftDays = weekDays.slice(0, 4);
 const rightDays = weekDays.slice(4);
 const hasRightEvents = rightDays.some((d) => d.items.length > 0);
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function applyAgendaVocabulary(title: string): string {
+  const vocabulary = config.agendaVocabulary;
+  if (!vocabulary) return title;
+
+  let result = title;
+  for (const [from, to] of Object.entries(vocabulary)) {
+    if (!from) continue;
+    const escaped = escapeRegExp(from);
+    const tokenRegex = new RegExp(
+      `(^|[^\\p{L}\\p{N}])(${escaped})(?=$|[^\\p{L}\\p{N}])`,
+      "gu",
+    );
+    result = result.replace(tokenRegex, `$1${to}`);
+  }
+
+  return result;
+}
+
 // ── Components ────────────────────────────────────────────────────────────────
 
 const WeekDayView: m.Component<{ day: WeekDay }> = {
@@ -237,7 +261,8 @@ const WeekDayView: m.Component<{ day: WeekDay }> = {
               m(".week-time", item.time),
               m(
                 ".week-title",
-                item.title + (item.name ? ` (${item.name})` : ""),
+                applyAgendaVocabulary(item.title) +
+                  (item.name ? ` (${item.name})` : ""),
               ),
             ),
           )

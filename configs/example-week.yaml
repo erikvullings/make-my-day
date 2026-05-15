@@ -6,6 +6,10 @@ labels:
   week: "Week Overview"
   noEvents: "No events"
 
+agendaVocabulary:
+  Persoonlijke Verzorging: "P.V."
+  L.A.J.B.: "Leo Bakker"
+
 agenda:
   - date: "2026-03-30"
     dayName: "Mon"

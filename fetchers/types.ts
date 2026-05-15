@@ -98,7 +98,7 @@ export interface CarenFetcherConfig {
 
 export interface QuoteFetcherConfig {
   enabled?: boolean;
-  api?: 'zenquotes' | 'quotable' | 'static';
+  api?: "zenquotes" | "quotable" | "static";
   text?: string;
   author?: string;
   language?: string;
@@ -106,7 +106,7 @@ export interface QuoteFetcherConfig {
 
 export interface JokeFetcherConfig {
   enabled?: boolean;
-  api?: 'jokeapi' | 'official-joke-api' | 'chuck-norris' | 'dadjoke' | 'static';
+  api?: "jokeapi" | "official-joke-api" | "chuck-norris" | "dadjoke" | "static";
   text?: string;
 }
 
@@ -123,13 +123,15 @@ export interface DashboardConfig {
   title?: string;
   language?: string;
   fontSize?: string;
+  /** Agenda-specific vocabulary replacements applied at render time. */
+  agendaVocabulary?: Record<string, string>;
   labels?: Labels;
   agenda?: DayAgenda[];
   weather?: WeatherData;
   medication?: Medication[];
   quote?: Quote | QuoteFetcherConfig;
   joke?: Joke | JokeFetcherConfig;
-  theme?: 'color' | 'bw';
+  theme?: "color" | "bw";
   width?: number;
   height?: number;
   fetchers?: FetchersConfig;

@@ -87,6 +87,8 @@ interface DashboardConfig {
   language?: string;
   /** Controls all font sizes. Options: small, medium, large (default), xlarge. */
   fontSize?: FontSize;
+  /** Agenda-only vocabulary replacements applied during rendering. */
+  agendaVocabulary?: Record<string, string>;
   labels?: Labels;
   agenda?: DayAgenda[];
   weather?: WeatherData;
@@ -295,12 +297,38 @@ function conditionKey(condition: string): string {
   return condition.toLowerCase().replace(/\s+(\w)/g, (_, c) => c.toUpperCase());
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Replace phrases only when they are standalone tokens/phrases, not inside
+ * larger words. This keeps replacements predictable for care abbreviations.
+ */
+function applyAgendaVocabulary(title: string): string {
+  const vocabulary = config.agendaVocabulary;
+  if (!vocabulary) return title;
+
+  let result = title;
+  for (const [from, to] of Object.entries(vocabulary)) {
+    if (!from) continue;
+    const escaped = escapeRegExp(from);
+    const tokenRegex = new RegExp(
+      `(^|[^\\p{L}\\p{N}])(${escaped})(?=$|[^\\p{L}\\p{N}])`,
+      "gu",
+    );
+    result = result.replace(tokenRegex, `$1${to}`);
+  }
+
+  return result;
+}
+
 /**
  * Pass-through; the "Care: " prefix is no longer injected by the Caren fetcher.
  * Event titles now come directly from Caren, e.g. "1 Persoonlijke Verzorging, L.A.J.B."
  */
 function translateTitle(title: string): string {
-  return title;
+  return applyAgendaVocabulary(title);
 }
 
 // ── Inline SVG assets ─────────────────────────────────────────────────────────

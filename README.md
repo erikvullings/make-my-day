@@ -161,6 +161,22 @@ medication:
     name: "Magnesium"
 ```
 
+### Agenda vocabulary replacements
+
+You can shorten long agenda labels or expand initials in rendered agenda titles with `agendaVocabulary`:
+
+```yaml
+agendaVocabulary:
+  Persoonlijke Verzorging: "P.V."
+  L.A.J.B.: "Leo Bakker"
+```
+
+Behavior:
+
+- Replacements are agenda-only (page 1 and page 2 agenda items)
+- Matching is whole-word/token aware (not inside larger words)
+- Entries are applied in YAML declaration order
+
 ### Accessing your dashboard
 
 | URL                                        | Description                              |
@@ -178,6 +194,10 @@ Here's a complete config combining **Caren.nl agenda**, **live weather**, **medi
 title: "Emma — Weekoverzicht"
 language: nl
 theme: color
+
+agendaVocabulary:
+  Persoonlijke Verzorging: "P.V."
+  L.A.J.B.: "Leo Bakker"
 
 fetchers:
   caren:
